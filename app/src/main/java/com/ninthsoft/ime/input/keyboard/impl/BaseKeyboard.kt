@@ -206,7 +206,9 @@ abstract class BaseKeyboard(
                     val isSwitchAction = def.behaviors.any { b ->
                         b is KeyDef.Behavior.Press && (b.action is KeyboardAction.LayoutSwitchAction || b.action is KeyboardAction.RotateSchema || b.action is KeyboardAction.ResumeAction)
                     }
-                    if (!isSwitchAction) {
+                    val isNonReturnAction = def.appearance.viewId == KeyView.button_return &&
+                        returnKeyIcon != 0 && returnKeyIcon != R.drawable.ic_keyboard_return
+                    if (!isSwitchAction && !isNonReturnAction) {
                         val keyLoc = IntArray(2)
                         val boardLoc = IntArray(2)
                         key.getLocationOnScreen(keyLoc)
