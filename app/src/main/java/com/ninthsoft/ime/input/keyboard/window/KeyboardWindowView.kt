@@ -200,6 +200,10 @@ class KeyboardWindowView(
             CandidateManager.KEY_SHOW_INDEX,
             CandidateManager.KEY_SHOW_COMMENT,
                 -> post { refreshColors() }
+
+            KeyboardManager.Keyboard.FixedReturnKey.KEY -> post {
+                keyboardStateManager.refreshReturnKey()
+            }
         }
     }
 

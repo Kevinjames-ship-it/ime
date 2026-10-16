@@ -22,6 +22,7 @@
     <string name="key_border">隐藏键边框</string>
     <string name="key_border_show">绘制按键边框</string>
     <string name="expand_border">绘制展开键边框</string>
+    <string name="fixed_return_key">固定回车键功能</string>
 
 
     <string name="keyboard_layout">键盘布局</string>

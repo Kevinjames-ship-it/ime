@@ -82,6 +82,9 @@ fun KeyboardSettingsScreen(onBack: () -> Unit) {
     var expandBorder by remember {
         mutableStateOf(KeyboardManager.Keyboard.ExpandBorder.isEnabled(context))
     }
+    var fixedReturnKey by remember {
+        mutableStateOf(KeyboardManager.Keyboard.FixedReturnKey.isEnabled(context))
+    }
 
     Scaffold(
         topBar = {
@@ -158,6 +161,14 @@ fun KeyboardSettingsScreen(onBack: () -> Unit) {
                     onCheckedChange = {
                         expandBorder = it
                         KeyboardManager.Keyboard.ExpandBorder.setEnabled(context, it)
+                    },
+                )
+                SwitchRow(
+                    title = stringResource(R.string.fixed_return_key),
+                    checked = fixedReturnKey,
+                    onCheckedChange = {
+                        fixedReturnKey = it
+                        KeyboardManager.Keyboard.FixedReturnKey.setEnabled(context, it)
                     },
                 )
                 Spacer(Modifier.height(14.dp))

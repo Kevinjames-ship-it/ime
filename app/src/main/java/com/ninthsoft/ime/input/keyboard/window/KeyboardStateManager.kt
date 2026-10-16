@@ -232,6 +232,15 @@ object KeyboardStateManager {
         }
     }
 
+    fun refreshReturnKey() {
+        val info = lastEditorInfo ?: return
+        val keyboard = currentKeyboardName?.let { keyboards[it] } ?: return
+        lastImeAction = info.imeOptions and EditorInfo.IME_MASK_ACTION
+        lastAppliedEmpty = lastInputEmpty
+        lastAppliedComposing = isComposing
+        keyboard.updateEditorInfo(info, lastInputEmpty, isComposing)
+    }
+
     // 仅当 (imeAction, empty, isComposing) 三者有实际变化时才刷新回车键。
     private fun updateReturnKeyIfNeeded() {
         val info = lastEditorInfo ?: return

@@ -424,6 +424,13 @@ abstract class BaseKeyboard(
 
 
     override fun updateEditorInfo(info: EditorInfo, empty: Boolean, isComposing: Boolean) {
+        if (KeyboardManager.Keyboard.FixedReturnKey.isEnabled(context)) {
+            if (returnKeyIcon != R.drawable.ic_keyboard_return) {
+                returnKeyIcon = R.drawable.ic_keyboard_return
+                returnKeyView?.img?.imageResource = returnKeyIcon
+            }
+            return
+        }
         val action = info.imeOptions and EditorInfo.IME_MASK_ACTION
         val icon = if (empty || isComposing) {
             R.drawable.ic_keyboard_return
