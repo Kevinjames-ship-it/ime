@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.ninthsoft.ime.R
+import androidx.compose.ui.platform.LocalContext
+import com.ninthsoft.ime.data.keyboard.theme.KeyboardColors
 import com.ninthsoft.ime.data.keyboard.theme.KeyboardTheme
 import com.ninthsoft.ime.ui.theme.SuccessDark
 import com.ninthsoft.ime.ui.theme.SuccessLight
@@ -521,7 +523,10 @@ object ScreenComponent {
         isCustom: Boolean = false,
         onClick: () -> Unit,
     ) {
-        val colors = theme.colors
+        val colors = KeyboardColors.colorsFor(
+            LocalContext.current,
+            theme,
+        )
 
         val borderColor by animateColorAsState(
             targetValue = if (selected) MaterialTheme.colorScheme.primary

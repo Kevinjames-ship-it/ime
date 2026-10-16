@@ -91,50 +91,16 @@ object KeyboardThemePresets {
         ),
     )
 
-    val Sunset = KeyboardTheme(
-        id = "sunset",
-        name = "落日",
-        colors = KeyboardColors.ColorScheme(
-            keyBackground = Color.rgb(245, 238, 230),
-            keyPressed = Color.rgb(230, 215, 200),
-            keyBorderStroke = Color.rgb(230, 215, 200),
-            specialKeyBackground = Color.rgb(245, 238, 230),
-            specialKeyPressed = Color.rgb(230, 215, 200),
-            specialKeyBorderStroke = Color.rgb(230, 215, 200),
-            accentKeyBackground = Color.rgb(242, 100, 25),
-            accentKeyPressed = Color.rgb(220, 85, 15),
-            accentKeyBorderStroke = Color.rgb(242, 100, 25),
-            keyText = Color.rgb(50, 40, 35),
-            specialKeyText = Color.rgb(120, 100, 90),
-            accentKeyText = Color.rgb(255, 255, 255),
-            altText = Color.rgb(140, 120, 110),
-            background = Color.rgb(250, 245, 240),
-            surfaceStyle = KeyboardColors.SurfaceStyle.Raised,
-            panel = KeyboardColors.ColorScheme.PanelColors(
-                background = Color.rgb(242, 235, 228),
-                toolbarText = Color.rgb(50, 40, 35),
-                toolbarActived = Color.rgb(242, 100, 25),
-                toolbarIcon = Color.rgb(120, 100, 90),
-                candidateBackground = Color.rgb(255, 255, 255),
-                candidateText = Color.rgb(50, 40, 35),
-                candidateIndex = Color.rgb(140, 120, 110),
-                candidateDivider = Color.argb(100, 220, 200, 185),
-                toolbarPressed = Color.rgb(230, 215, 200),
-            ),
-            pinner = KeyboardColors.ColorScheme.PinnerColors(
-                background = Color.rgb(245, 238, 230),
-                textColor = Color.rgb(50, 40, 35),
-                secondaryTextColor = Color.rgb(120, 100, 90),
-            ),
-            toastBackground = Color.rgb(60, 50, 45),
-            toastText = Color.rgb(255, 255, 255),
-        ),
+    val Monet = KeyboardTheme(
+        id = MonetPalette.ID,
+        name = "莫奈色",
+        colors = MonetPalette.LightFallback,
     )
 
     val ALL: List<KeyboardTheme>
         get() = listOf(
             Amoled,
             Light,
-            Sunset,
+            Monet,
         ) + customThemes
 }

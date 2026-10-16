@@ -1,5 +1,9 @@
 package com.ninthsoft.ime.input
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.inputmethodservice.InputMethodService
@@ -8,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import androidx.core.content.ContextCompat
 import com.ninthsoft.ime.ImeApplication
 import com.ninthsoft.ime.base.util.InputConnectionUtil
 import com.ninthsoft.ime.data.manager.CandidateManager
@@ -60,6 +65,18 @@ class ImeInputMethodService : InputMethodService() {
         keyboardWindow?.onConfigChanged(key.orEmpty())
     }
 
+    // 壁纸变化后系统需要一点时间重新合成并应用动态配色 overlay，延迟刷新以读取到最新的莫奈色。
+    private val wallpaperReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != Intent.ACTION_WALLPAPER_CHANGED) return
+            keyboardWindow?.view?.postDelayed({
+                if (isInputViewShown) {
+                    keyboardWindow?.view?.refreshColorsIfChanged()
+                }
+            }, WALLPAPER_REFRESH_DELAY_MS)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         virtualInputConnection.addOnChangeListener {
@@ -84,6 +101,12 @@ class ImeInputMethodService : InputMethodService() {
         themePrefs.registerOnSharedPreferenceChangeListener(prefsListener)
         schemaPrefs.registerOnSharedPreferenceChangeListener(prefsListener)
         candidatePrefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        ContextCompat.registerReceiver(
+            this,
+            wallpaperReceiver,
+            IntentFilter(Intent.ACTION_WALLPAPER_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -155,6 +178,7 @@ class ImeInputMethodService : InputMethodService() {
         themePrefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
         schemaPrefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
         candidatePrefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
+        runCatching { unregisterReceiver(wallpaperReceiver) }
         super.onDestroy()
     }
 
@@ -274,5 +298,9 @@ class ImeInputMethodService : InputMethodService() {
         text += ic.getTextAfterCursor(1, 0)?.toString() ?: ""
         keyboardWindow?.onInputChanged(text, virtualInputConnection = phraseAddBridgeActive)
         if (text.isEmpty()) engine?.onInputCleared()
+    }
+
+    companion object {
+        private const val WALLPAPER_REFRESH_DELAY_MS = 500L
     }
 }

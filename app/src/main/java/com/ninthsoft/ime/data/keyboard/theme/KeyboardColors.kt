@@ -82,7 +82,7 @@ object KeyboardColors {
     }
 
     fun resolve(context: Context): ColorScheme {
-        val c = themeFor(context).colors
+        val c = themeFor(context).resolvedColors(context)
         val userRadius = KeyboardManager.Keyboard.KeyRadius.getDp(context).toFloat()
         val userHMargin = KeyboardManager.Keyboard.Gap.getHorizontalDp(context).toFloat()
         val userVMargin = KeyboardManager.Keyboard.Gap.getVerticalDp(context).toFloat()
@@ -92,6 +92,12 @@ object KeyboardColors {
             keyVMargin = userVMargin,
         )
     }
+
+    fun colorsFor(context: Context, theme: KeyboardTheme): ColorScheme =
+        theme.resolvedColors(context)
+
+    private fun KeyboardTheme.resolvedColors(context: Context): ColorScheme =
+        if (id == MonetPalette.ID) MonetPalette.build(context) else colors
 
     fun themeFor(context: Context): KeyboardTheme {
         val followSystem = KeyboardManager.Keyboard.getFollowSystem(context)
