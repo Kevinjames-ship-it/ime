@@ -23,6 +23,9 @@
     <string name="key_border_show">绘制按键边框</string>
     <string name="expand_border">绘制展开键边框</string>
     <string name="fixed_return_key">固定回车键功能</string>
+    <string name="schema_switch_position">方案切换键位置</string>
+    <string name="position_left">居左</string>
+    <string name="position_right">居右</string>
 
 
     <string name="keyboard_layout">键盘布局</string>
@@ -64,6 +67,9 @@
     <string name="keyboard_theme_light">浅色模式主题</string>
     <string name="keyboard_theme_dark">深色模式主题</string>
     <string name="keyboard_theme_scan">扫码</string>
+    <string name="keyboard_theme_scan_source">选择导入方式</string>
+    <string name="keyboard_theme_scan_camera">从相机扫描</string>
+    <string name="keyboard_theme_scan_gallery">从相册选取</string>
     <string name="keyboard_theme_refresh">刷新</string>
     <string name="keyboard_theme_share">分享</string>
     <string name="keyboard_theme_export_title">选择要导出的主题</string>

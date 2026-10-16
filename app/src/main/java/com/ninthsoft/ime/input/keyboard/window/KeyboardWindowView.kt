@@ -204,6 +204,10 @@ class KeyboardWindowView(
             KeyboardManager.Keyboard.FixedReturnKey.KEY -> post {
                 keyboardStateManager.refreshReturnKey()
             }
+
+            KeyboardManager.Keyboard.SchemaSwitchPosition.KEY -> post {
+                keyboardStateManager.rebuild()
+            }
         }
     }
 

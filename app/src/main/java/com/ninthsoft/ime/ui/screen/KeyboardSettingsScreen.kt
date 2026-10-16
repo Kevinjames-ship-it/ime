@@ -22,6 +22,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,6 +37,7 @@ import com.ninthsoft.ime.data.manager.KeyboardManager
 import com.ninthsoft.ime.ui.screen.ScreenComponent.SettingsGroup
 import com.ninthsoft.ime.ui.screen.ScreenComponent.SliderRow
 import com.ninthsoft.ime.ui.screen.ScreenComponent.SwitchRow
+import com.ninthsoft.ime.ui.screen.ScreenComponent.OptionRow
 import com.ninthsoft.ime.ui.screen.ScreenComponent.barFontSize
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +86,9 @@ fun KeyboardSettingsScreen(onBack: () -> Unit) {
     }
     var fixedReturnKey by remember {
         mutableStateOf(KeyboardManager.Keyboard.FixedReturnKey.isEnabled(context))
+    }
+    var schemaSwitchPosition by remember {
+        mutableIntStateOf(KeyboardManager.Keyboard.SchemaSwitchPosition.get(context))
     }
 
     Scaffold(
@@ -169,6 +174,18 @@ fun KeyboardSettingsScreen(onBack: () -> Unit) {
                     onCheckedChange = {
                         fixedReturnKey = it
                         KeyboardManager.Keyboard.FixedReturnKey.setEnabled(context, it)
+                    },
+                )
+                OptionRow(
+                    title = stringResource(R.string.schema_switch_position),
+                    options = listOf(
+                        stringResource(R.string.position_left),
+                        stringResource(R.string.position_right),
+                    ),
+                    selectedIndex = schemaSwitchPosition,
+                    onSelect = {
+                        schemaSwitchPosition = it
+                        KeyboardManager.Keyboard.SchemaSwitchPosition.set(context, it)
                     },
                 )
                 Spacer(Modifier.height(14.dp))

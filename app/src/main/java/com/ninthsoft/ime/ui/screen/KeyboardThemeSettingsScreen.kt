@@ -5,9 +5,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -54,7 +56,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.BinaryBitmap
+import com.google.zxing.DecodeHintType
 import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatReader
+import com.google.zxing.RGBLuminanceSource
+import com.google.zxing.common.HybridBinarizer
 import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -102,6 +109,25 @@ private object ThemeCode {
     }
 }
 
+private fun decodeQrFromImage(context: Context, uri: Uri): String? {
+    val bitmap = runCatching {
+        context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+    }.getOrNull() ?: return null
+    val width = bitmap.width
+    val height = bitmap.height
+    if (width <= 0 || height <= 0) return null
+    val pixels = IntArray(width * height)
+    bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+    val binaryBitmap = BinaryBitmap(HybridBinarizer(RGBLuminanceSource(width, height, pixels)))
+    val hints = mapOf(
+        DecodeHintType.TRY_HARDER to true,
+        DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+    )
+    return runCatching {
+        MultiFormatReader().apply { setHints(hints) }.decode(binaryBitmap).text
+    }.getOrNull()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KeyboardThemeSettingsScreen(onBack: () -> Unit) {
@@ -121,6 +147,7 @@ fun KeyboardThemeSettingsScreen(onBack: () -> Unit) {
     }
 
     var showQrDialog by remember { mutableStateOf(false) }
+    var showScanSourceDialog by remember { mutableStateOf(false) }
     var showThemePicker by remember { mutableStateOf(false) }
     var showOverwriteDialog by remember { mutableStateOf(false) }
     var pendingImport by remember { mutableStateOf<KeyboardTheme?>(null) }
@@ -244,6 +271,18 @@ fun KeyboardThemeSettingsScreen(onBack: () -> Unit) {
         importTheme(importedTheme)
     }
 
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val importedTheme = decodeQrFromImage(context, uri)?.let { ThemeCode.decode(it) }
+        if (importedTheme == null) {
+            Toast.makeText(context, R.string.keyboard_theme_invalid_qr, Toast.LENGTH_SHORT).show()
+            return@rememberLauncherForActivityResult
+        }
+        importTheme(importedTheme)
+    }
+
     val qrBitmap = qrCodeText.takeIf { it.isNotEmpty() }?.let {
         remember(it) { ThemeCode.toBitmap(it) }
     }
@@ -269,7 +308,7 @@ fun KeyboardThemeSettingsScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { scanLauncher.launch(scanOptions) }) {
+                    IconButton(onClick = { showScanSourceDialog = true }) {
                         Icon(
                             Icons.Filled.QrCodeScanner,
                             contentDescription = stringResource(R.string.keyboard_theme_scan),
@@ -474,6 +513,45 @@ fun KeyboardThemeSettingsScreen(onBack: () -> Unit) {
                     pendingImport = null
                     showOverwriteDialog = false
                 }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
+    if (showScanSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showScanSourceDialog = false },
+            title = { Text(stringResource(R.string.keyboard_theme_scan_source)) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TextButton(
+                        onClick = {
+                            showScanSourceDialog = false
+                            scanLauncher.launch(scanOptions)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.keyboard_theme_scan_camera))
+                    }
+                    TextButton(
+                        onClick = {
+                            showScanSourceDialog = false
+                            galleryLauncher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.keyboard_theme_scan_gallery))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showScanSourceDialog = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },

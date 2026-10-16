@@ -238,7 +238,7 @@ object KeyboardManager {
 
             fun isEnabled(context: Context): Boolean {
                 return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                    .getBoolean(KEY, true)
+                    .getBoolean(KEY, false)
             }
 
             fun setEnabled(context: Context, enabled: Boolean) {
@@ -276,6 +276,25 @@ object KeyboardManager {
                     putBoolean(KEY, enabled)
                 }
             }
+        }
+
+        object SchemaSwitchPosition {
+            const val KEY = "keyboard.schema_switch_position"
+            const val LEFT = 0
+            const val RIGHT = 1
+
+            fun get(context: Context): Int {
+                return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .getInt(KEY, LEFT)
+            }
+
+            fun set(context: Context, position: Int) {
+                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit {
+                    putInt(KEY, position)
+                }
+            }
+
+            fun isRight(context: Context): Boolean = get(context) == RIGHT
         }
     }
 }

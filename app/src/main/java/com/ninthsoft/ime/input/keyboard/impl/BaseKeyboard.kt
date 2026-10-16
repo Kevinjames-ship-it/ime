@@ -73,6 +73,18 @@ abstract class BaseKeyboard(
         (spanPanelViews.firstOrNull() as? SidePanelKeyView)?.setOnItemActionListener(listener)
     }
 
+    private fun swapSchemaSwitchAndPeriod(parts: List<KeyDef>): List<KeyDef> {
+        val schemaIndex = parts.indexOfFirst { def ->
+            def.behaviors.any { it is KeyDef.Behavior.Press && it.action is KeyboardAction.RotateSchema }
+        }
+        val periodIndex = parts.indexOfFirst { it.appearance.viewId == KeyView.button_peroid }
+        if (schemaIndex < 0 || periodIndex < 0 || schemaIndex == periodIndex) return parts
+        return parts.toMutableList().apply {
+            this[schemaIndex] = parts[periodIndex]
+            this[periodIndex] = parts[schemaIndex]
+        }
+    }
+
     init {
         data class SpanDef(val def: KeyDef, val startRow: Int, val endRow: Int)
 
@@ -94,8 +106,11 @@ abstract class BaseKeyboard(
         spanPanelViews = spanViews
 
         keyRows = keyLayout.mapIndexed { rowIndex, row ->
-            val parts =
+            var parts =
                 row.filterNot { it.appearance is KeyDef.Appearance.SidePannel && it.appearance.rowSpan > 1 }
+            if (KeyboardManager.Keyboard.SchemaSwitchPosition.isRight(context)) {
+                parts = swapSchemaSwitchAndPeriod(parts)
+            }
             val keyViews = parts.map(::createKeyView)
             val sidePanelAtRow = spanDefs.indexOfFirst { rowIndex in it.startRow..it.endRow }
             val spanScale = if (sidePanelAtRow >= 0) {
