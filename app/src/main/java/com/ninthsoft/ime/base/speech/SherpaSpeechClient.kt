@@ -145,6 +145,8 @@ object SherpaSpeechClient {
     }
 
     private fun onDone() {
+        // 仅在已停止（非进行中）时处理 DONE；若用户已开始新会话，旧会话的 DONE 不能重置新会话状态
+        if (holding.get()) return
         finishSession()
     }
 
@@ -216,7 +218,13 @@ object SherpaSpeechClient {
         if (discard) discarding.set(true)
         uiJob?.cancel()
         uiJob = null
-        val messenger = synchronized(connectLock) { speechMessenger }
+        val messenger = synchronized(connectLock) {
+            speechMessenger ?: run {
+                // 服务尚未绑定完成：撤销排队中的启动请求，否则连接后会在无界面的情况下开始录音
+                pending.removeAll { it == SpeechIpc.MSG_START }
+                null
+            }
+        }
         if (messenger != null) {
             runCatching { messenger.send(SpeechIpc.message(SpeechIpc.MSG_STOP)) }
         } else {

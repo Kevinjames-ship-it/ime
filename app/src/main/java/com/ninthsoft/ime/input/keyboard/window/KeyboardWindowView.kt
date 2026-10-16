@@ -652,10 +652,12 @@ class KeyboardWindowView(
     }
 
     private fun stopVoiceInput() {
-        if (!isVoiceRecording) return
+        // 不因 isVoiceRecording 为 false 而提前返回：界面可能残留（如锁定状态下 DONE 后），
+        // 关闭按钮必须始终能收起浮层并通知语音会话停止（stopHoldSession 自身是幂等的）。
         isVoiceRecording = false
         panel.recording = false
         SherpaSpeechClient.stopHoldSession()
+        voiceOverlay.unlock()
         voiceOverlay.hide()
     }
 

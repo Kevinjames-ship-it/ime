@@ -34,7 +34,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 import android.util.Log
@@ -57,11 +56,12 @@ class SpeechRecognitionService : Service() {
     private val streamRef = AtomicReference<OnlineStream?>(null)
     private val qnnRuntimeRef = AtomicReference<QnnRuntime?>(null)
 
+    // 会话意图标记：由 MSG_START / MSG_STOP 在主线程同步修改，不依赖音频协程是否已启动。
     private val holding = AtomicBoolean(false)
     private val audioLock = Any()
-    private var audioJob: Job? = null
-    private var audioRecord: AudioRecord? = null
-    private var clientMessenger: Messenger? = null
+    @Volatile private var audioJob: Job? = null
+    @Volatile private var audioRecord: AudioRecord? = null
+    @Volatile private var clientMessenger: Messenger? = null
 
     private var lastRawText: String? = null
     private var lastEmittedText: String? = null
@@ -90,6 +90,8 @@ class SpeechRecognitionService : Service() {
                 }
 
                 SpeechIpc.MSG_START -> {
+                    // 新会话开始前结束上一个仍在收尾的音频协程，避免两路 AudioRecord 同时存在
+                    audioJob?.takeIf { it.isActive }?.cancel()
                     clientMessenger = msg.replyTo
                     val ready = initEngine(this@SpeechRecognitionService, silent = true)
                     if (!ready) {
@@ -106,11 +108,19 @@ class SpeechRecognitionService : Service() {
                 }
 
                 SpeechIpc.MSG_STOP -> {
-                    if (!holding.compareAndSet(true, false)) return@Callback true
+                    // 无条件结束：不依赖音频是否已开始，避免停止指令在录音启动前到达被丢弃
+                    holding.set(false)
                     audioRecord?.runCatching { stop() }
-                    audioJob?.let { runBlocking { it.join() } }
-                    sendClient(SpeechIpc.MSG_DONE)
-                    clientMessenger = null
+                    val job = audioJob
+                    val target = clientMessenger
+                    // 等待音频协程收尾（末尾解码、释放资源）后再通知 DONE，不阻塞主线程
+                    scope.launch {
+                        job?.join()
+                        target?.let { m ->
+                            runCatching { m.send(SpeechIpc.message(SpeechIpc.MSG_DONE)) }
+                        }
+                        if (clientMessenger === target) clientMessenger = null
+                    }
                 }
             }
             true
@@ -305,6 +315,7 @@ class SpeechRecognitionService : Service() {
             return
         }
 
+        holding.set(true)
         audioJob = scope.launch(Dispatchers.IO) {
             var recorder: AudioRecord? = null
             try {
@@ -325,7 +336,6 @@ class SpeechRecognitionService : Service() {
 
                 audioRecord = recorder
                 recorder.startRecording()
-                holding.set(true)
                 sendClient(SpeechIpc.MSG_RECORDING_STARTED)
 
                 val bytes = ByteArray(chunkBytes)
