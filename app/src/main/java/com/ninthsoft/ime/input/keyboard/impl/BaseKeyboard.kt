@@ -62,16 +62,17 @@ abstract class BaseKeyboard(
     }
 
     protected open fun updateSidePanel(items: List<KeyDef>) {
-        (spanPanelViews.firstOrNull() as? SidePanelKeyView)?.updateItems(items)
-    }
+    spanPanelViews.filterIsInstance<SidePanelKeyView>().firstOrNull()?.updateItems(items)
+}
 
-    protected open fun resetSidePanelPosition() {
-        (spanPanelViews.firstOrNull() as? SidePanelKeyView)?.resetPosition()
-    }
+protected open fun resetSidePanelPosition() {
+    spanPanelViews.filterIsInstance<SidePanelKeyView>().firstOrNull()?.resetPosition()
+}
 
-    fun setSidePanelItemListener(listener: (KeyboardAction) -> Unit) {
-        (spanPanelViews.firstOrNull() as? SidePanelKeyView)?.setOnItemActionListener(listener)
-    }
+fun setSidePanelItemListener(listener: (KeyboardAction) -> Unit) {
+    spanPanelViews.filterIsInstance<SidePanelKeyView>().firstOrNull()
+        ?.setOnItemActionListener(listener)
+}
 
     private fun swapSchemaSwitchAndPeriod(parts: List<KeyDef>): List<KeyDef> {
         val schemaIndex = parts.indexOfFirst { def ->
