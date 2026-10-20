@@ -86,18 +86,24 @@ abstract class BaseKeyboard(
     }
 
     init {
-        data class SpanDef(val def: KeyDef, val startRow: Int, val endRow: Int)
+        data class SpanDef(
+            val def: KeyDef,
+            val startRow: Int,
+            val endRow: Int,
+            /** true = 贴左（侧栏）；false = 贴右（大回车等） */
+            val anchoredStart: Boolean,
+        )
 
         val spanDefs = mutableListOf<SpanDef>()
         for (ri in keyLayout.indices) {
-            for (def in keyLayout[ri]) {
-                if (def.appearance is KeyDef.Appearance.SidePannel && def.appearance.rowSpan > 1) {
-                    spanDefs.add(
-                        SpanDef(
-                            def,
-                            ri,
-                            (ri + def.appearance.rowSpan - 1).coerceAtMost(keyLayout.size - 1)
-                        )
+            keyLayout[ri].forEachIndexed { index, def ->
+                val span = def.appearance.rowSpan
+                if (span > 1) {
+                    spanDefs += SpanDef(
+                        def = def,
+                        startRow = ri,
+                        endRow = (ri + span - 1).coerceAtMost(keyLayout.lastIndex),
+                        anchoredStart = index == 0,
                     )
                 }
             }
@@ -105,17 +111,21 @@ abstract class BaseKeyboard(
         val spanViews = spanDefs.map { createKeyView(it.def).also { v -> v.id = generateViewId() } }
         spanPanelViews = spanViews
 
+        fun spanAt(row: Int, start: Boolean): KeyView? {
+            val i = spanDefs.indexOfFirst { it.anchoredStart == start && row in it.startRow..it.endRow }
+            return if (i >= 0) spanViews[i] else null
+        }
+
         keyRows = keyLayout.mapIndexed { rowIndex, row ->
-            var parts =
-                row.filterNot { it.appearance is KeyDef.Appearance.SidePannel && it.appearance.rowSpan > 1 }
-            if (KeyboardManager.Keyboard.SchemaSwitchPosition.isRight(context)) {
-                parts = swapSchemaSwitchAndPeriod(parts)
-            }
+            val parts = row.filterNot { it.appearance.rowSpan > 1 }
             val keyViews = parts.map(::createKeyView)
-            val sidePanelAtRow = spanDefs.indexOfFirst { rowIndex in it.startRow..it.endRow }
-            val spanScale = if (sidePanelAtRow >= 0) {
-                1f / (1f - spanDefs[sidePanelAtRow].def.appearance.percentWidth)
-            } else 1f
+            val leftSpan = spanAt(rowIndex, true)
+            val rightSpan = spanAt(rowIndex, false)
+            val occupied = spanDefs
+                .filter { rowIndex in it.startRow..it.endRow }
+                .sumOf { it.def.appearance.percentWidth.toDouble() }
+                .toFloat()
+            val spanScale = 1f / (1f - occupied)
 
             constraintLayout {
                 var totalWidth = 0f
@@ -123,13 +133,13 @@ abstract class BaseKeyboard(
                     add(view, lParams {
                         centerVertically()
                         if (index == 0) {
-                            leftOfParent()
+                            if (leftSpan != null) leftToRightOf(leftSpan) else leftOfParent()
                             horizontalChainStyle = LayoutParams.CHAIN_PACKED
                         } else {
                             leftToRightOf(keyViews[index - 1])
                         }
                         if (index == keyViews.size - 1) {
-                            rightOfParent()
+                            if (rightSpan != null) rightToLeftOf(rightSpan) else rightOfParent()
                             horizontalChainStyle = LayoutParams.CHAIN_PACKED
                         } else {
                             rightToLeftOf(keyViews[index + 1])
@@ -141,7 +151,7 @@ abstract class BaseKeyboard(
                         totalWidth += if (it != 0f) it else 1f
                     }
                 }
-                if (expandKeypressArea && totalWidth < 1f) {
+                if (expandKeypressArea && keyViews.isNotEmpty() && totalWidth < 1f) {
                     val free = (1f - totalWidth) / 2f
                     val firstScaledPercent = parts.first().appearance.percentWidth * spanScale
                     val lastScaledPercent = parts.last().appearance.percentWidth * spanScale
@@ -160,19 +170,15 @@ abstract class BaseKeyboard(
                 }
             }
         }
+
         keyRows.forEachIndexed { index, row ->
             add(row, lParams {
-                if (index == 0) topOfParent()
-                else below(keyRows[index - 1])
-                if (index == keyRows.size - 1) bottomOfParent()
-                else above(keyRows[index + 1])
-                val sidePanelAtRow = spanDefs.indexOfFirst { index in it.startRow..it.endRow }
-                if (sidePanelAtRow >= 0) {
-                    leftToRightOf(spanViews[sidePanelAtRow])
-                } else {
-                    leftOfParent()
-                }
-                rightOfParent()
+                if (index == 0) topOfParent() else below(keyRows[index - 1])
+                if (index == keyRows.size - 1) bottomOfParent() else above(keyRows[index + 1])
+                val leftSpan = spanAt(index, true)
+                val rightSpan = spanAt(index, false)
+                if (leftSpan != null) leftToRightOf(leftSpan) else leftOfParent()
+                if (rightSpan != null) rightToLeftOf(rightSpan) else rightOfParent()
             })
         }
 
@@ -181,7 +187,7 @@ abstract class BaseKeyboard(
             add(spanViews[i], lParams {
                 topToTop = keyRows[sd.startRow].id
                 bottomToBottom = keyRows[sd.endRow].id
-                leftOfParent()
+                if (sd.anchoredStart) leftOfParent() else rightOfParent()
                 matchConstraintPercentWidth = sd.def.appearance.percentWidth
             })
         }
