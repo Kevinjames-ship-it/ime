@@ -187,19 +187,30 @@ fun symbolSwitchKey(percentWidth: Float): KeyDef = KeyDef(
     behaviors = setOf(KeyDef.Behavior.Press(KeyboardAction.LayoutSwitchAction(SymbolKeyboard.NAME))),
 )
 
-fun returnKey(percentWidth: Float): KeyDef = KeyDef(
+fun returnKey(percentWidth: Float, rowSpan: Int = 1): KeyDef = KeyDef(
     appearance = KeyDef.Appearance.Image(
         src = R.drawable.ic_keyboard_return,
         viewId = KeyView.button_return,
         percentWidth = percentWidth,
         variant = Variant.Accent,
         border = Border.Special,
+        rowSpan = rowSpan,
     ), behaviors = setOf(
         KeyDef.Behavior.Press(KeyboardAction.ReturnAction()),
         KeyDef.Behavior.LongPress(KeyboardAction.ReturnAction(true)),
     )
 )
-
+fun newlineKey(percentWidth: Float = 0.10f, label: String = "换行") = KeyDef(
+    appearance = KeyDef.Appearance.Text(
+        displayText = label,
+        textSize = 15f,
+        percentWidth = percentWidth,
+        variant = Variant.Alternative,
+    ),
+    behaviors = setOf(
+        KeyDef.Behavior.Press(KeyboardAction.KeyCodeAction(KeyEvent.KEYCODE_ENTER))
+    ),
+)
 fun prevPageKey(percentWidth: Float): KeyDef = KeyDef(
     appearance = KeyDef.Appearance.Image(
         src = R.drawable.ic_keyboard_arrow_up,
