@@ -17,6 +17,10 @@ open class KeyDef(
         val viewId: Int,
         var visibility: Int = View.VISIBLE,
     ) {
+    /** 纵向跨行数；> 1 时由 BaseKeyboard 按跨行键布局 */
+    open val rowSpan: Int get() = 1
+
+    enum class Variant { Normal, Alternative, Accent, AltForeground, None }
         enum class Variant { Normal, Alternative, Accent, AltForeground, None }
 
         enum class Border { Default, On, Off, Special }
@@ -60,7 +64,7 @@ open class KeyDef(
         )
 
         class SidePannel(
-            val rowSpan: Int = 3,
+            override val rowSpan: Int = 3,   // ← 这里加 override
             val visableRow: Int = 4,
             percentWidth: Float = 0.1f,
             variant: Variant = Variant.Normal,
@@ -76,6 +80,7 @@ open class KeyDef(
             border: Border = Border.Default,
             margin: Boolean = true,
             viewId: Int = -1,
+            override val rowSpan: Int = 1,   // ← 新增
         ) : Appearance(percentWidth, variant, border, margin, viewId)
 
         class ImageText(
