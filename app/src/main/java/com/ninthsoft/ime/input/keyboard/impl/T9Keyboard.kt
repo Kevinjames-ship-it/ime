@@ -9,17 +9,14 @@ import com.ninthsoft.ime.input.keyboard.key.KeyboardAction
 import com.ninthsoft.ime.input.keyboard.key.KeyDef
 import com.ninthsoft.ime.input.keyboard.key.KeyDef.Appearance.Variant
 import com.ninthsoft.ime.input.keyboard.key.backspaceKey
-import com.ninthsoft.ime.input.keyboard.key.clearKey
-import com.ninthsoft.ime.input.keyboard.key.infiniteKey
 import com.ninthsoft.ime.input.keyboard.key.layoutSwitchKey
 import com.ninthsoft.ime.input.keyboard.key.mixedAlphabetKey
-import com.ninthsoft.ime.input.keyboard.key.peroidKey
 import com.ninthsoft.ime.input.keyboard.key.returnKey
 import com.ninthsoft.ime.input.keyboard.key.schemaSwitchKey
 import com.ninthsoft.ime.input.keyboard.key.segmentKey
 import com.ninthsoft.ime.input.keyboard.key.sidePannelKey
 import com.ninthsoft.ime.input.keyboard.key.spaceKey
-import com.ninthsoft.ime.input.keyboard.key.zeroKey
+import com.ninthsoft.ime.input.keyboard.key.newlineKey
 
 @SuppressLint("ViewConstructor")
 class T9Keyboard(
@@ -72,33 +69,32 @@ class T9Keyboard(
         const val NAME = "T9"
 
         val Layout: List<List<KeyDef>> = listOf(
-            listOf(
-                sidePannelKey(rowSpan = 3, visableRow = 4),
-                segmentKey(percentWidth = 0.23333f),
-                mixedAlphabetKey("2", "ABC"),
-                mixedAlphabetKey("3", "DEF"),
-                backspaceKey(),
-            ),
-            listOf(
-                mixedAlphabetKey("4", "GHI"),
-                mixedAlphabetKey("5", "JKL"),
-                mixedAlphabetKey("6", "MNO"),
-                clearKey(0.15f),
-            ),
-            listOf(
-                mixedAlphabetKey("7", "PQRS"),
-                mixedAlphabetKey("8", "TUV"),
-                mixedAlphabetKey("9", "WXYZ"),
-                zeroKey()
-            ),
-            listOf(
-                layoutSwitchKey("?123", NumberKeyboard.NAME, percentWidth = 0.15f),
-                schemaSwitchKey(0.13f),
-                spaceKey(percentWidth = 0.44f),
-                peroidKey(percentWidth = 0.13f),
-                returnKey(percentWidth = 0.15f),
-            ),
-        )
+    listOf(
+        sidePannelKey(percentWidth = 0.09f, rowSpan = 3, visableRow = 4),
+        segmentKey(percentWidth = 0.27f),
+        mixedAlphabetKey("2", "ABC", percentWidth = 0.27f),
+        mixedAlphabetKey("3", "DEF", percentWidth = 0.27f),
+        backspaceKey(percentWidth = 0.10f),
+    ),
+    listOf(
+        mixedAlphabetKey("4", "GHI", percentWidth = 0.27f),
+        mixedAlphabetKey("5", "JKL", percentWidth = 0.27f),
+        mixedAlphabetKey("6", "MNO", percentWidth = 0.27f),
+        newlineKey(percentWidth = 0.10f),
+    ),
+    listOf(
+        mixedAlphabetKey("7", "PQRS", percentWidth = 0.27f),
+        mixedAlphabetKey("8", "TUV", percentWidth = 0.27f),
+        mixedAlphabetKey("9", "WXYZ", percentWidth = 0.27f),
+        returnKey(percentWidth = 0.10f, rowSpan = 2),
+    ),
+    listOf(
+        layoutSwitchKey("?123", NumberKeyboard.NAME, percentWidth = 0.12f),
+        layoutSwitchKey("!#?", SymbolKeyboard.NAME, percentWidth = 0.10f),
+        spaceKey(percentWidth = 0.55f),
+        schemaSwitchKey(0.13f),
+    ),
+)
     }
 
     override fun name(): String {
